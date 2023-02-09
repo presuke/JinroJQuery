@@ -1,20 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <title>Jinro</title>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta name="action_attackresult_confirmed" content="{{ App\Consts\ActionConst::ATTACK_RESULT_CONFIRMED }}" />
-    <meta name="action_voteresult_confirmed" content="{{ App\Consts\ActionConst::VOTERESULT_CONFIRMED }}" />
-    <meta name="action_go_myroom" content="{{ App\Consts\ActionConst::GOMYROOM }}" />
-    <meta name="action_go_hall" content="{{ App\Consts\ActionConst::GOHALL }}" />
-    <meta name="action_vote" content="{{ App\Consts\ActionConst::VOTE }}" />
-    <meta name="action_sleep" content="{{ App\Consts\ActionConst::SLEEP }}" />
-    <meta name="action_attack" content="{{ App\Consts\ActionConst::ATTACK }}" />
-    <meta name="action_defense" content="{{ App\Consts\ActionConst::DEFENSE }}" />
-    <meta name="action_psychic" content="{{ App\Consts\ActionConst::PSYCHIC }}" />
+    <title>Jinro</title>
 
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
@@ -27,13 +17,15 @@
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.min.css">
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.css">
     <link rel="stylesheet" type="text/css" href="css/play.css" />
-    <link rel="stylesheet" type="text/css" href="css/portrait.css" />
-    <link rel="stylesheet" type="text/css" href="css/landscape.css" />
+
 
     <!-- Fonts -->
-    <!--
     <link href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    -->
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+        }
+    </style>
 </head>
 <body class="antialiased">
 <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
@@ -76,32 +68,32 @@
                         <div id="changeSex" class="btn-square-pop" data-sex="m" style="z-index:0;">アバターの性別切替</div>
                         <br style="clear:left;">
                         <div class="avater" data-sex="m" style="">
-                            <div data-index="01" style="background-image: url('image/avatar/m/shot01.png');"></div>
-                            <div data-index="02" style="background-image: url('image/avatar/m/shot02.png');"></div>
-                            <div data-index="03" style="background-image: url('image/avatar/m/shot03.png');"></div>
-                            <div data-index="04" style="background-image: url('image/avatar/m/shot04.png');"></div>
-                            <div data-index="05" style="background-image: url('image/avatar/m/shot05.png');"></div>
-                            <div data-index="06" style="background-image: url('image/avatar/m/shot06.png');"></div>
-                            <div data-index="07" style="background-image: url('image/avatar/m/shot07.png');"></div>
-                            <div data-index="08" style="background-image: url('image/avatar/m/shot08.png');"></div>
-                            <div data-index="09" style="background-image: url('image/avatar/m/shot09.png');"></div>
-                            <div data-index="10" style="background-image: url('image/avatar/m/shot10.png');"></div>
-                            <div data-index="11" style="background-image: url('image/avatar/m/shot11.png');"></div>
-                            <div data-index="12" style="background-image: url('image/avatar/m/shot12.png');"></div>
+                            <div data-index="01" style="background-image: url('image/avatar/m/shot01.png'"></div>
+                            <div data-index="02" style="background-image: url('image/avatar/m/shot02.png'"></div>
+                            <div data-index="03" style="background-image: url('image/avatar/m/shot03.png'"></div>
+                            <div data-index="04" style="background-image: url('image/avatar/m/shot04.png'"></div>
+                            <div data-index="05" style="background-image: url('image/avatar/m/shot05.png'"></div>
+                            <div data-index="06" style="background-image: url('image/avatar/m/shot06.png'"></div>
+                            <div data-index="07" style="background-image: url('image/avatar/m/shot07.png'"></div>
+                            <div data-index="08" style="background-image: url('image/avatar/m/shot08.png'"></div>
+                            <div data-index="09" style="background-image: url('image/avatar/m/shot09.png'"></div>
+                            <div data-index="10" style="background-image: url('image/avatar/m/shot10.png'"></div>
+                            <div data-index="11" style="background-image: url('image/avatar/m/shot11.png'"></div>
+                            <div data-index="12" style="background-image: url('image/avatar/m/shot12.png'"></div>
                         </div>
                         <div class="avater" data-sex="f" style="margin-left:-10000;">
-                            <div data-index="01" style="background-image: url('image/avatar/f/shot01.png');"></div>
-                            <div data-index="02" style="background-image: url('image/avatar/f/shot02.png');"></div>
-                            <div data-index="03" style="background-image: url('image/avatar/f/shot03.png');"></div>
-                            <div data-index="04" style="background-image: url('image/avatar/f/shot04.png');"></div>
-                            <div data-index="05" style="background-image: url('image/avatar/f/shot05.png');"></div>
-                            <div data-index="06" style="background-image: url('image/avatar/f/shot06.png');"></div>
-                            <div data-index="07" style="background-image: url('image/avatar/f/shot07.png');"></div>
-                            <div data-index="08" style="background-image: url('image/avatar/f/shot08.png');"></div>
-                            <div data-index="09" style="background-image: url('image/avatar/f/shot09.png');"></div>
-                            <div data-index="10" style="background-image: url('image/avatar/f/shot10.png');"></div>
-                            <div data-index="11" style="background-image: url('image/avatar/f/shot11.png');"></div>
-                            <div data-index="12" style="background-image: url('image/avatar/f/shot12.png');"></div>
+                            <div data-index="01" style="background-image: url('image/avatar/f/shot01.png'"></div>
+                            <div data-index="02" style="background-image: url('image/avatar/f/shot02.png'"></div>
+                            <div data-index="03" style="background-image: url('image/avatar/f/shot03.png'"></div>
+                            <div data-index="04" style="background-image: url('image/avatar/f/shot04.png'"></div>
+                            <div data-index="05" style="background-image: url('image/avatar/f/shot05.png'"></div>
+                            <div data-index="06" style="background-image: url('image/avatar/f/shot06.png'"></div>
+                            <div data-index="07" style="background-image: url('image/avatar/f/shot07.png'"></div>
+                            <div data-index="08" style="background-image: url('image/avatar/f/shot08.png'"></div>
+                            <div data-index="09" style="background-image: url('image/avatar/f/shot09.png'"></div>
+                            <div data-index="10" style="background-image: url('image/avatar/f/shot10.png'"></div>
+                            <div data-index="11" style="background-image: url('image/avatar/f/shot11.png'"></div>
+                            <div data-index="12" style="background-image: url('image/avatar/f/shot12.png'"></div>
                         </div>
                     </div>
                     <div id="setPassCode">

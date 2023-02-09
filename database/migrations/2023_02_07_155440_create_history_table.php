@@ -13,14 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('historys', function (Blueprint $table) {
-            $table->string('room_name', 20)->primary();
-            $table->string('player_name', 20)->primary();
-            $table->integer('date');
-            $table->integer('time_zone');
-            $table->integer('action');
-            $table->integer('target');
+        Schema::create('histories', function (Blueprint $table) {
+            $table->string('room_name', 20)->nullable(false);
+            $table->string('player_name', 20)->nullable(false);
+            $table->integer('date')->default(0);
+            $table->integer('time_zone')->default(0);
+            $table->string('action',25)->nullable(false)->default('');
+            $table->string('target',20)->nullable(false)->default('');
             $table->timestamps();
+            $table->primary(['room_name', 'player_name', 'date', 'time_zone']);
         });
     }
 

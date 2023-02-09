@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('name',20)->primary();
             $table->integer('date')->default(0);
             $table->integer('time_zone')->default(0);
-            $table->string('voted',200)->nullable(false)->default('');
-            $table->string('killed',20)->nullable(false)->default('');
+            $table->string('voted',1024)->nullable(false)->default('');
+            $table->string('killed',1024)->nullable(false)->default('');
             $table->string('winner',20)->nullable(false)->default('');
             $table->timestamps();
         });

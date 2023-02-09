@@ -34,15 +34,18 @@ $(document).ready(async function(){
             $(this).data("sex", sex);
             $(".avater[data-sex='" + sex + "']").animate({'marginLeft': 10}, {duration: 500, queue: false}, 'swing');
         });
+        $(".avater[data-sex='f']").css('marginLeft', -5000);
+
         $("#setPlayerProfile").click(async function(){
-            const disabled = "disabled";
             const sex = $("#changeSex").data("sex");
-            let avater = "";
+            let icon = "";
+            let isDisabled = false;
             $(".avater[data-sex='" + sex + "'] .slick-active").each(function(){
-                avater = $(this).data("index");
-                if($(this).data(disabled) != undefined){
-                    avater = disabled;
-                }
+                isDisabled = $(this).data("disabled") == "disabled";
+
+                icon = $(this).css("background-image");
+                icon = icon.split("avatar/")[1];
+                icon = icon.split("\")")[0];
             });
             let pass = "";
             $(".tenKeyInput").each(function(){
@@ -50,17 +53,16 @@ $(document).ready(async function(){
             });
             if(pass == ""){
                 await showMessage("パスコードを設定してください");
-            }else if(avater == disabled){
+            }else if(isDisabled){
                 await showMessage("このアバターは他のプレイヤーに使われています。別のアバターを選んでください。");
             }else{
                 let jsonStatus = $("#status").val();
                 let objStatus = JSON.parse(jsonStatus);
-                objStatus.sex = sex;
-                objStatus.avater = avater;
+                objStatus.icon = icon;
                 objStatus.pass = pass;
                 $("#status").val( JSON.stringify(objStatus) );
 
-                let obj = await callAPI("init", $("#status").val());
+                let obj = await callAPI("initPlayer", $("#status").val());
                 if(obj.error != undefined){
                     showMessage(obj.error);
                 }else{
@@ -97,27 +99,30 @@ $(document).ready(async function(){
 
         $("#overlay").html("");
 
-        if(objStatus.info.Name == undefined){
+        if(objStatus.info.name == undefined){
             $("#initialBox").hide();
             choiceRoom(null);
         }else{
-            $(".myName").html(objStatus.info.Name);
+            $(".myName").html(objStatus.info.name);
 
-            if(objStatus.info.Pass == ""){
+            if(objStatus.info.pass == ""){
                 $("#overlay").fadeOut();
 
-                const obj = await callAPI("getUseableAvaters", $("#status").val());
-                if(obj.avaters != undefined){
-                    Object.keys(obj.avaters).forEach(function(sex) {
-                        const avaters = obj.avaters[sex];
-                        $.each(avaters, function() {
-                            $(".avater[data-sex='" + sex + "'] div[data-index='" + this + "'] img").css("filter", "grayscale(100%)");
-                            $(".avater[data-sex='" + sex + "'] div[data-index='" + this + "']").data("disabled", true);
+                const obj = await callAPI("getPlayers", $("#status").val());
+                if(obj.players != undefined){
+                    obj.players.forEach(function(player) {
+                        $(".avater").each(function() {
+                            const avaterIcon = $(this).css("background-image");
+                            if(avaterIcon.indexOf(player.icon)) {
+                                $(this).css("filter", "grayscale(100%)");
+                                $(this).data("disabled", true);
+                            }
                         });
                     });
                 }
             }else{
                 $("#initialBox").fadeOut();
+                $(".backGroundDesign").fadeOut();
                 while(true){
                     let flg = await auth();
                     if(flg){
@@ -142,7 +147,7 @@ async function showMain(){
     $("#statusBox").fadeIn();
     $("#information").fadeIn();
 
-    $("#menu").css("background-image", "url('image/avatar/" + objStatus.info.Sex + "/icon" + objStatus.info.Avater + ".png')");
+    $("#menu").css("background-image", "url('image/avatar/" + objStatus.info.icon + "')");
     $("#menu").fadeIn();
 
     const se = new Audio('mp3/openGame.mp3');
@@ -164,10 +169,10 @@ async function checkStatus(){
             let objStatus = JSON.parse(jsonStatus);
 
             //$("#informationBody").html("最新の状態を確認中・・");
-            const obj = await callAPI("checkStatus", $("#status").val());
+            const obj = await callAPI("getRoomStatus", $("#status").val());
 
             //背景変更
-            let crntTimeZone = Number(obj.room.TimeZone);
+            let crntTimeZone = Number(obj.room.time_zone);
             let prevTimeZone = (crntTimeZone + 3) % 4;
 
             $(".backGroundDesign[data-index!=" + crntTimeZone + "]").fadeOut();
@@ -180,18 +185,18 @@ async function checkStatus(){
             let cntLive = 0;
             let cntAdvance = 0;
             Object.values(obj.players).forEach(function (player) {
-                let backGroundImage = "url(\"image/avatar/" + player.Sex + "/icon" + player.Avater + ".png\")";
+                let backGroundImage = "url(\"image/avatar/" + player.icon + "\")";
                 let color = "orange";
                 let grayScale = 0;
 
                 //タイムゾーンが進んでいる人
-                if(Number(player.TimeZone) > crntTimeZone ||
-                   (crntTimeZone==3 && Number(player.TimeZone) == 0) ){
+                if(Number(player.time_zone) > crntTimeZone ||
+                   (crntTimeZone==3 && Number(player.time_zone) == 0) ){
                     color = "green";
                     cntAdvance++;
                 }
                 //死んでる人
-                if(player.Killed == ""){
+                if(player.killed == ""){
                     cntLive++;
                 }else{
                     color = "black";
@@ -200,24 +205,24 @@ async function checkStatus(){
                 }
 
                 //グラフィカルステータスのhtmlを形成
-                let classOption = "select_" + ((player.Name == objStatus.select) ? "on" : "off");
+                let classOption = "select_" + ((player.name == objStatus.select) ? "on" : "off");
 
-                if(player.Name == objStatus.player ||
-                   player.Killed != ""){
+                if(player.name == objStatus.player ||
+                   player.killed != ""){
                     classOption = "select_off select_disabled";
                 }
 
-                html += "<div class='select " + classOption + "' data-select='" + player.Name + "' style='float:left;'>";
+                html += "<div class='select " + classOption + "' data-select='" + player.name + "' style='float:left;'>";
                 html += "<div class='iconPlayer' style='background-color:" + color + "; background-repeat: no-repeat; background-image:" + backGroundImage + "; filter:grayscale(" + grayScale + "%);'>";
                 html += (player.Sex == "" ? "<br>未入室" : "");
                 html += "</div>";
-                html += "<div class='playerName'>" + player.Name + "</div>"
+                html += "<div class='playerName'>" + player.name + "</div>"
                 html += "</div>";
             });
             html += "<br style='clear:left;' />";
             $("#statusGraphic").html(html);
 
-            html = "<div style='font-size:smaller;'>現在の状況(" + obj.timeStamp + "時点)</div>";
+            html = "<div style='font-size:smaller;'>現在の状況(" + obj.serverTime + "時点)</div>";
             html += "<div style='font-size:smaller;'>"+ cntAdvance + "/" + cntLive + "人のプレイヤーが" + actionList[crntTimeZone] + "済です。</div>";
             html += "<div style='font-size:smaller;'>※" + cntKilled + "人のプレイヤーが退場しています。</div>";
             $("#statusText").html(html);
@@ -243,22 +248,22 @@ function requestAction(objStatus, obj){
     return new Promise(async function(resolve, reject){
         try{
             //タイムゾーンを比較
-            let timeZoneMine = Number(obj.players[objStatus.player].TimeZone);
-            let timeZoneRoom = Number(obj.room.TimeZone);
-            $("#timeZone").html((Number(obj.room.Date) + 1) + "日目の" + timeZoneList[timeZoneRoom] + "です");
+            let timeZoneMine = Number(obj.players[objStatus.player].time_zone);
+            let timeZoneRoom = Number(obj.room.time_zone);
+            $("#timeZone").html((Number(obj.room.date) + 1) + "日目の" + timeZoneList[timeZoneRoom] + "です");
 
             let html = "";
             switch(timeZoneRoom){
                 //夕刻（投票をする）
                 case 0:
-                    if(objStatus.info.Killed != ""){
+                    if(objStatus.info.killed != ""){
                         html += "<div style='margin-top:10px;'>あなたは敗退しました。草葉の陰から見守りましょう。</div>";
                     }else{
                         html += "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/vote.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
                          if(timeZoneMine == timeZoneRoom){
                             reloadInterval = 10000;
                             html += "人狼だと思う人を選んで投票してください。<br>";
-                            html += "<div style='width:100%; text-align:center;'><div data-action='vote' class='action btn-square-pop'>投票する</div></div>";
+                            html += "<div style='width:100%; text-align:center;'><div data-action='action_vote' class='action btn-square-pop'>投票する</div></div>";
                             html += "<br style='clear:left;' />";
                         }else{
                             html += "あなたは投票を済ませましたが、他のプレイヤーがまだです。<br>しばらくお待ち下さい。";
@@ -271,12 +276,12 @@ function requestAction(objStatus, obj){
                 case 1:
                     await showResultVote(obj);
 
-                    if(objStatus.info.Killed != ""){
+                    if(objStatus.info.killed != ""){
                         html += "<div style='margin-top:10px;'>あなたは敗退しました。草葉の陰から見守りましょう。</div>";
-                        //html += "<div style='width:100%; text-align:center;'><div data-action='goMyRoom' class='action btn-square-pop'>了解</div></div>";
+                        //html += "<div style='width:100%; text-align:center;'><div data-action='action_go_myroom' class='action btn-square-pop'>了解</div></div>";
                     }else if(timeZoneMine == timeZoneRoom){
                         html += "<div style='margin-top:10px;'>就寝時刻です。<br>結果を確認したら、自室へ戻りましょう。</div>";
-                        html += "<div style='width:100%; text-align:center;'><div data-action='goMyRoom' class='action btn-square-pop'>自室へ戻る</div></div>";
+                        html += "<div style='width:100%; text-align:center;'><div data-action='action_go_myroom' class='action btn-square-pop'>自室へ戻る</div></div>";
                     }else{
                         html = "あなたは自室に戻りましたが、他のプレイヤーがまだです。しばらくお待ち下さい。";
                     }
@@ -285,22 +290,22 @@ function requestAction(objStatus, obj){
 
                 //深夜（それぞれの行動を受付ける）
                 case 2:
-                    if(objStatus.info.Killed != ""){
+                    if(objStatus.info.killed != ""){
                         html += "<div style='margin-top:10px;'>あなたは敗退しました。草葉の陰から見守りましょう。</div>";
                     }else if(timeZoneMine == timeZoneRoom){
-                        switch(objStatus.info.Role){
+                        switch(objStatus.info.role){
                             case "murabito":
                                 html = "あなたは村人です。<br>";
                                 html = "人狼に襲われないことに期待しつつ、今日は眠りましょう。<br>";
-                                html += "<div style='width:100%; text-align:center;'><div data-action='sleep' class='action btn-square-pop'>眠る</div></div>";
+                                html += "<div style='width:100%; text-align:center;'><div data-action='action_sleep' class='action btn-square-pop'>眠る</div></div>";
                                 html += "<br style='clear:left;' />";
                                 break;
 
                             case "rebaishi":
                                 html = "あなたは霊媒師です。<br>";
                                 html += "<div style='width:100%; text-align:center;'>";
-                                html += "<div data-action='psychic' class='action btn-square-pop'>霊媒する</div>";
-                                html += "<div data-action='sleep' class='action btn-square-pop'>眠る</div>";
+                                html += "<div data-action='action_psychic' class='action btn-square-pop'>霊媒する</div>";
+                                html += "<div data-action='action_sleep' class='action btn-square-pop'>眠る</div>";
                                 html += "</div>";
                                 html += "<br style='clear:left;' />";
                                 break;
@@ -308,14 +313,14 @@ function requestAction(objStatus, obj){
                             case "jinro":
                                 html = "あなたは人狼です。襲撃対象を選択してください。<br>";
                                 html += "<div id='UIPlayerSelect'></div>";
-                                html += "<div style='width:100%; text-align:center;'><div data-action='attack' class='action btn-square-pop'>襲撃する</div></div>";
+                                html += "<div style='width:100%; text-align:center;'><div data-action='action_attack' class='action btn-square-pop'>襲撃する</div></div>";
                                 html += "<br style='clear:left;' />";
                                 break;
 
                             case "yojinbo":
                                 html = "あなたは用心棒です。守る対象を選択してください。<br>";
                                 html += "<div id='UIPlayerSelect'></div>";
-                                html += "<div style='width:100%; text-align:center;'><div data-action='save' class='action btn-square-pop'>守る</div></div>";
+                                html += "<div style='width:100%; text-align:center;'><div data-action='action_defense' class='action btn-square-pop'>守る</div></div>";
                                 html += "<br style='clear:left;' />";
                                 break;
                         }
@@ -328,48 +333,44 @@ function requestAction(objStatus, obj){
                 //朝（結果確認）
                 case 3:
                     await showResultAttack(obj);
-
-                    let killed = [];
                     try{
-                        killed = JSON.parse(obj.room.Killed);
-                    }catch(error){
+                        let html = "";
+                        const attackResult = JSON.parse(obj.room.killed);
+                        if(attackResult.killed.length > 0){
+                            attackResult.killed.forEach(function(killedPlayer){
+                                html = "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/kill.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
+                                if(killedPlayer == objStatus.info.name){
+                                    html += "<div>あなたが襲撃されました。</div>";
+                                    objStatus.info.killed = "killed";
+                                }else{
+                                    html += "<div>" + killedPlayer + "さんが襲撃されました。</div>";
+                                }
+                            });
+                        }else{
+                            html += "<div>昨夜の人狼の襲撃は失敗しました！</div>";
+                        }
 
+                        if(objStatus.info.killed != ""){
+                            html += "<div style='margin-top:10px;'>あなたは敗退しました。草葉の陰から見守りましょう。</div>";
+                            //html += "<div style='width:100%; text-align:center;'><div data-action='action_go_hall' class='action btn-square-pop'>了解</div></div>";
+                        }else if(timeZoneMine == timeZoneRoom){
+                            html += "<div style='margin-top:10px;'>結果を確認したら、誰が人狼か推理して次の投票に備えましょう。<br>準備が出来たら、投票のためにホールへ集まりましょう。</div>";
+                            html += "<div style='width:100%; text-align:center;'><div data-action='action_go_hall' class='action btn-square-pop'>ホールへ行く</div></div>";
+                        }else{
+                            html = "あなたはホールへ付きましたが、他のプレイヤーがまだです。<br>しばらくお待ち下さい。";
+                        }
+                        $("#informationBody").html(html);
+                    }catch(ex){
+                        showError(ex + obj.room.killed);
                     }
-
-                    if(killed.length > 0){
-                        killed.forEach(function(killedPlayer){
-                            html = "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/kill.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
-                            if(killedPlayer == objStatus.info.Name){
-                                html += "<div>あなたが襲撃されました。</div>";
-                                objStatus.info.Killed = "killed";
-                            }else{
-                                html += "<div>" + killedPlayer + "さんが襲撃されました。</div>";
-                            }
-                        });
-                    }else{
-                        html += "<div>昨夜の人狼の襲撃は失敗しました！</div>";
-                    }
-                    if(obj.room.Result != ""){
-                        html += "<div>" + obj.room.Result + "</div>";
-                    }
-                    if(objStatus.info.Killed != ""){
-                        html += "<div style='margin-top:10px;'>あなたは敗退しました。草葉の陰から見守りましょう。</div>";
-                        //html += "<div style='width:100%; text-align:center;'><div data-action='goHall' class='action btn-square-pop'>了解</div></div>";
-                    }else if(timeZoneMine == timeZoneRoom){
-                        html += "<div style='margin-top:10px;'>結果を確認したら、誰が人狼か推理して次の投票に備えましょう。<br>準備が出来たら、投票のためにホールへ集まりましょう。</div>";
-                        html += "<div style='width:100%; text-align:center;'><div data-action='goHall' class='action btn-square-pop'>ホールへ行く</div></div>";
-                    }else{
-                        html = "あなたはホールへ付きましたが、他のプレイヤーがまだです。<br>しばらくお待ち下さい。";
-                    }
-                    $("#informationBody").html(html);
                     break;
             }
             //プレイヤーの選択や、アクションをするためのロジック
             makeUIPlayerAction(obj, objStatus);
 
             //勝者が決している場合
-            if(obj.room.Winner != ""){
-                html = obj.room.Winner + "側の勝利です！勝者は次の方々です。";
+            if(obj.room.winner != ""){
+                html = obj.room.winner + "側の勝利です！勝者は次の方々です。";
                 html += "<br style='clear:left;'>";
                 objStatus.isGameSet = true;
                 $("#status").val( JSON.stringify(objStatus) );
@@ -377,7 +378,7 @@ function requestAction(objStatus, obj){
                 Object.values(obj.players).forEach(function (player) {
                     if(player.Winner == "1"){
                         html += "<div class='iconWinner'>"
-                        html += "<div style='background-image:url(\"image/avatar/" + player.Sex + "/icon" + player.Avater + ".png\");'>";
+                        html += "<div style='background-image:url(\"image/avatar/" + player.icon + "\");'>";
                         html += "</div>";
                         html += "<div style='text-align:center;font-size:smaller;color:white;'>" + player.Name + "さん</div>"
                         html += "</div>";
@@ -408,7 +409,7 @@ async function action(action){
                 return;
         }
 
-        const obj = await callAPI(action, $("#status").val());
+        const obj = await callAPI("action_" + action, $("#status").val());
         if(obj.msg != undefined){
             await showMessage(obj.msg);
             checkStatus();
@@ -422,12 +423,13 @@ async function action(action){
 function showResultVote(obj){
     return new Promise(async function(resolve, reject){
         //確認済みかどうか？
+        const VOTE_RESULT_CONFIRMED = $('meta[name="action_voteresult_confirmed"]').attr('content');
         let flgConfirmed = false;
         obj.ownHistorys.forEach(function(history){
-            if(history.RoomId == obj.room.Id &&
-               history.Date == obj.room.Date &&
-               history.TimeZone == obj.room.TimeZone &&
-               history.Confirimed == 1){
+            if(history.room_name == obj.room.name &&
+               history.date == obj.room.date &&
+               history.time_zone == obj.room.time_zone &&
+               history.action == VOTE_RESULT_CONFIRMED){
                 flgConfirmed = true;
             }
         });
@@ -437,19 +439,24 @@ function showResultVote(obj){
             const jsonStatus = $("#status").val();
             const objStatus = JSON.parse(jsonStatus);
             let html = "";
-            if(obj.room.Voted != ""){
-                const se = new Audio('mp3/punishment.mp3');
-                se.play();
+            try{
+                const votedResult = JSON.parse(obj.room.voted);
+                if(votedResult.kill != "") {
+                    const se = new Audio('mp3/punishment.mp3');
+                    se.play();
 
-                html += "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/punishment.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
-                if(obj.room.Voted == objStatus.info.Name){
-                    html += "<div>投票の結果、あなたが退場となりました。</div>";
-                    objStatus.info.Killed = "killed";
+                    html += "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/punishment.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
+                    if (votedResult.kill == objStatus.info.name) {
+                        html += "<div>投票の結果、あなたが退場となりました。</div>";
+                        objStatus.info.killed = "killed";
+                    } else {
+                        html += "<div>投票の結果、" + votedResult.kill + "さんが退場となりました。</div>";
+                    }
                 }else{
-                    html += "<div>投票の結果、" + obj.room.Voted  + "さんが退場となりました。</div>";
+                    html += "<div>" + votedResult.msg + "</div>";
                 }
-            }else{
-                html += "<div>" + obj.room.Result + "</div>";
+            }catch(ex){
+                html += "<div>Parse Error:" + ex.message + "(" + obj.room.voted + ")</div>";
             }
             $("#dialogAlert").dialog({
                 title: "投票結果",
@@ -467,7 +474,7 @@ function showResultVote(obj){
                         text: "OK",
                         click: async function() {
                             $( this ).dialog( "close" );
-                            await callAPI("confirmed", $("#status").val());
+                            await action(VOTE_RESULT_CONFIRMED);
                             return resolve();
                         }
                     }
@@ -481,12 +488,13 @@ function showResultVote(obj){
 function showResultAttack(obj){
     return new Promise(async function(resolve, reject){
         //確認済みかどうか？
+        const ATTACK_RESULT_CONFIRMED = $('meta[name="action_attackresult_confirmed"]').attr('content');
         let flgConfirmed = false;
         obj.ownHistorys.forEach(function(history){
-            if(history.RoomId == obj.room.Id &&
-               history.Date == obj.room.Date &&
-               history.TimeZone == obj.room.TimeZone &&
-               history.Confirimed == 1){
+            if(history.room_name == obj.room.name &&
+               history.date == obj.room.date &&
+               history.time_zone == obj.room.time_zone &&
+               history.action == ATTACK_RESULT_CONFIRMED){
                 flgConfirmed = true;
             }
         });
@@ -496,55 +504,60 @@ function showResultAttack(obj){
             const jsonStatus = $("#status").val();
             const objStatus = JSON.parse(jsonStatus);
             let html = "";
-            let killed = [];
+            let attackResult = [];
             try{
-                killed = JSON.parse(obj.room.Killed);
-            }catch(error){
-
-            }
-
-            if(killed.length > 0){
-                killed.forEach(function(killedPlayer){
+                attackResult = JSON.parse(obj.room.killed);
+                if(attackResult.killed.length > 0){
                     const se = new Audio('mp3/killed.mp3');
                     se.play();
-                    html = "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/kill.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
-                    if(killedPlayer == objStatus.info.Name){
-                        html += "<div>あなたが襲撃されました。</div>";
-                        objStatus.info.Killed = "killed";
+                    attackResult.killed.forEach(function(killedPlayer){
+                        html = "<div style='width:50px; height:50px; border-radius: 50%; background-image: url(\"image/kill.png\"); background-size: cover; background-repeat: no-repeat;'></div>";
+                        if(killedPlayer == objStatus.info.name){
+                            html += "<div>あなたが襲撃されました。</div>";
+                            objStatus.info.killed = "killed";
+                        }else{
+                            html += "<div>" + killedPlayer + "さんが襲撃されました。</div>";
+                        }
+                    });
+                }else{
+                    const se = new Audio('mp3/saved.mp3');
+                    se.play();
+                    html += "<div>昨夜の人狼の襲撃は失敗しました！</div>";
+                }
+
+                //守られた人発表
+                attackResult.saved.forEach(function(savedPlayer){
+                    if(savedPlayer == objStatus.info.name){
+                        html += "<div>あなたが守られました。</div>";
                     }else{
-                        html += "<div>" + killedPlayer + "さんが襲撃されました。</div>";
+                        html += "<div>" + savedPlayer + "さんが守られました。</div>";
                     }
                 });
-            }else{
-                const se = new Audio('mp3/saved.mp3');
-                se.play();
-                html += "<div>昨夜の人狼の襲撃は失敗しました！</div>";
-            }
-            if(obj.room.Result != ""){
-                html += "<div>" + obj.room.Result + "</div>";
-            }
-            $("#dialogAlert").dialog({
-                title: "襲撃結果",
-                modal: true,
-                position: {my: "center center" , at: "center center", of: window},
-                show : "fade",
-                hide : "fade",
-                width: $("#main").width() * 0.9,
-                height: $("#main").height() * 0.9,
-                open : function(event, ui){
-                    $("#dialogAlert").html(html);
-                },
-                buttons: [
-                    {
-                        text: "OK",
-                        click: async function() {
-                            $( this ).dialog( "close" );
-                            await callAPI("confirmed", $("#status").val());
-                            return resolve();
+                $("#dialogAlert").dialog({
+                    title: "襲撃結果",
+                    modal: true,
+                    position: {my: "center center" , at: "center center", of: window},
+                    show : "fade",
+                    hide : "fade",
+                    width: $("#main").width() * 0.9,
+                    height: $("#main").height() * 0.9,
+                    open : function(event, ui){
+                        $("#dialogAlert").html(html);
+                    },
+                    buttons: [
+                        {
+                            text: "OK",
+                            click: async function() {
+                                $( this ).dialog( "close" );
+                                await action(ATTACK_RESULT_CONFIRMED, $("#status").val());
+                                return resolve();
+                            }
                         }
-                    }
-                ]
-            });
+                    ]
+                });
+            }catch(error){
+                showError(ex + obj.room.killed);
+            }
         }
     });
 }
@@ -558,7 +571,8 @@ function makeUIPlayerAction(obj, objStatus){
         const disabled = "disabled";
         if(!$(this).hasClass(disabled)){
             $(this).addClass(disabled);
-            const mode = $(this).data("action");
+            const actionName = $(this).data("action");
+            const mode = $('meta[name="' + actionName + '"]').attr('content');;
             await action(mode);
             $(this).removeClass(disabled);
         }
@@ -659,19 +673,19 @@ async function showRole(isOpenning){
                 },8000);
                 setTimeout(function(){
                     se.play();
-                    $("#messageBody").append("<div><img src='image/" + objStatus.info.Role + ".png' /></div>");
+                    $("#messageBody").append("<div><img src='image/" + objStatus.info.role + ".png' /></div>");
                     if(objStatus.info.jinrolist != undefined){
                         let friend = "";
                         objStatus.info.jinrolist.forEach(function(player){
                             if(player.Avater != ""){
-                                let backGroundImage = "url(\"image/avatar/" + player.Sex + "/icon" + player.Avater + ".png\")";
+                                let backGroundImage = "url(\"image/avatar/" + player.icon + "\")";
                                 let color = "orange";
 
                                 friend += "<div class='select_off select_disabled' style='float:left;'>";
                                 friend += "<div class='iconPlayer' style='background-color:" + color + "; background-repeat: no-repeat; background-image:" + backGroundImage + ";'>";
                                 friend += "</div>";
                             }
-                            friend += "<div class='playerName' style='color:white;'>" + player.Name + "</div>"
+                            friend += "<div class='playerName' style='color:white;'>" + player.name + "</div>"
                             friend += "</div>";
                         });
                         if(friend != "")
@@ -694,19 +708,19 @@ async function showRole(isOpenning){
             }else{
                 $("#messageBody").html("<div>あなたは・・・</div>");
                 setTimeout(function(){
-                    $("#messageBody").append("<div><img src='image/" + objStatus.info.Role + ".png' /></div>");
+                    $("#messageBody").append("<div><img src='image/" + objStatus.info.role + ".png' /></div>");
                     if(objStatus.info.jinrolist != undefined){
                         let friend = "";
                         objStatus.info.jinrolist.forEach(function(player){
                             if(player.Avater != ""){
-                                let backGroundImage = "url(\"image/avatar/" + player.Sex + "/icon" + player.Avater + ".png\")";
+                                let backGroundImage = "url(\"image/avatar/" + player.icon + "\")";
                                 let color = "orange";
 
                                 friend += "<div class='select_off select_disabled' style='float:left;'>";
                                 friend += "<div class='iconPlayer' style='background-color:" + color + "; background-repeat: no-repeat; background-image:" + backGroundImage + ";'>";
                                 friend += "</div>";
                             }
-                            friend += "<div class='playerName' style='color:white;'>" + player.Name + "</div>"
+                            friend += "<div class='playerName' style='color:white;'>" + player.name + "</div>"
                             friend += "</div>";
                         });
                         if(friend != "")
@@ -776,7 +790,7 @@ function auth(){
                 passCode = $(this).html();
             });
 
-            if(passCode != objStatus.info.Pass){
+            if(passCode != objStatus.info.pass){
                 msgErr = "パスコードが違います";
             }
 
@@ -819,7 +833,10 @@ function callAPI(mode, json){
                 }
             })
             .fail(function(xhr) {
-                return reject("通信が失敗しました" + xhr);
+                if(xhr.responseJSON != undefined)
+                    return reject("通信が失敗しました" + JSON.stringify(xhr.responseJSON));
+                else
+                    return reject("通信が失敗しました" + xhr);
             })
             .always(function(xhr, msg) {
             });
@@ -1134,7 +1151,7 @@ async function choiceRoom(roomName){
         if(obj.room != undefined &&
            obj.players != undefined){
             obj.players.forEach(function (player) {
-                let url = "index.php?room=" + obj.room + "&player=" + player.name;
+                let url = "?room=" + obj.room + "&player=" + player.name;
                 let qr = "https://chart.apis.google.com/chart?chs=100x100&cht=qr&chl=" + url;
                 html += "<div style='text-align:center; float:left; width:150px; margin:15px;'>";
                 //html += "<img src='" + qr + "' /><br>";
