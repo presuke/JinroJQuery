@@ -818,10 +818,10 @@ function auth(){
 //エンドポイントと通信する
 function callAPI(mode, json){
     return new Promise(async function(resolve, reject){
-        const endpoint = "{{ env('API_ENPPOINT') }}" + mode;
+        const endpoint = process.env.API_ENPPOINT + mode;
         const requestParameter = JSON.parse(json);
         $.ajax({
-                type: "POSTs",
+                type: "POST",
                 url: endpoint,
                 data: {"param": requestParameter}
             })
