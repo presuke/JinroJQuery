@@ -6,6 +6,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <meta name="api_path" content="{{ App\Consts\AppConst::API_PATH }}" />
+
     <meta name="action_attackresult_confirmed" content="{{ App\Consts\ActionConst::ATTACK_RESULT_CONFIRMED }}" />
     <meta name="action_voteresult_confirmed" content="{{ App\Consts\ActionConst::VOTERESULT_CONFIRMED }}" />
     <meta name="action_go_myroom" content="{{ App\Consts\ActionConst::GOMYROOM }}" />
