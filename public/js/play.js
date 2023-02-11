@@ -8,10 +8,45 @@ $(document).ready(async function(){
         $("#menu").click(function(){
             let jsonStatus = $("#status").val();
             let objStatus = JSON.parse(jsonStatus);
-            if(objStatus.info.Avater != "")
-                showRole(false);
-            else
+            if(objStatus.info.name != undefined){
+                $("#dialogAlert").dialog({
+                    title: "選んでください",
+                    modal: true,
+                    position: {my: "center center" , at: "center center", of: window},
+                    show : "fade",
+                    hide : "fade",
+                    width: $("#main").width() * 0.9,
+                    height: $("#main").height() * 0.9,
+                    open : function(event, ui){
+                        $(".ui-dialog-titlebar-close", $(this).parent()).hide();
+                        $(this).html("どうしますか？");
+                    },
+                    buttons: [
+                        {
+                            text: "役割を確認する",
+                            click: function() {
+                                $(this).dialog("close");
+                                showRole(false);
+                            }
+                        },
+                        {
+                            text: "このアプリについて",
+                            click: function(){
+                                $(this).dialog("close");
+                                dispDialogAbout();
+                            }
+                        },
+                        {
+                            text: "閉じる",
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }
+                    ]
+                });
+            }else{
                 choiceRoom(undefined);
+            }
         });
 
         $(".tenKey").each(function(){
@@ -214,7 +249,7 @@ async function checkStatus(){
 
                 html += "<div class='select " + classOption + "' data-select='" + player.name + "' style='float:left;'>";
                 html += "<div class='iconPlayer' style='background-color:" + color + "; background-repeat: no-repeat; background-image:" + backGroundImage + "; filter:grayscale(" + grayScale + "%);'>";
-                html += (player.Sex == "" ? "<br>未入室" : "");
+                html += (player.icon == "" ? "<br>未入室" : "");
                 html += "</div>";
                 html += "<div class='playerName'>" + player.name + "</div>"
                 html += "</div>";
@@ -370,13 +405,13 @@ function requestAction(objStatus, obj){
 
             //勝者が決している場合
             if(obj.room.winner != ""){
-                html = obj.room.winner + "側の勝利です！勝者は次の方々です。";
+                html = obj.room.winner + "側の勝利です！";
                 html += "<br style='clear:left;'>";
                 objStatus.isGameSet = true;
                 $("#status").val( JSON.stringify(objStatus) );
 
                 Object.values(obj.players).forEach(function (player) {
-                    if(player.Winner == "1"){
+                    if(player.winner == "1"){
                         html += "<div class='iconWinner'>"
                         html += "<div style='background-image:url(\"image/avatar/" + player.icon + "\");'>";
                         html += "</div>";
@@ -385,7 +420,7 @@ function requestAction(objStatus, obj){
                     }
                 });
                 showMessage(html);
-                $("#informationBody").html(obj.room.Winner + "側が勝利しました！");
+                $("#informationBody").html(obj.room.winner + "側が勝利しました！");
             }
 
             return resolve();
@@ -818,7 +853,7 @@ function auth(){
 //エンドポイントと通信する
 function callAPI(mode, json){
     return new Promise(async function(resolve, reject){
-        const endpoint = process.env.API_ENPPOINT + mode;
+        const endpoint = $('meta[name="api_path"]').attr('content') + mode;
         const requestParameter = JSON.parse(json);
         $.ajax({
                 type: "POST",
@@ -934,9 +969,10 @@ async function makeRoomStep(step){
 
             //部屋が存在するかどうか確認
             var obj = await callAPI("getRooms", $("#dialogMakeRoomParam").val());
-            if(obj.rooms[param.roomName] != undefined){
-                msgErr = "部屋「" + param.roomName + "」は既に存在します。別の部屋名を指定してください。";
-            }
+            obj.rooms.forEach(function(room){
+                if(room.name == param.roomName)
+                    msgErr = "部屋「" + param.roomName + "」は既に存在します。別の部屋名を指定してください。";
+            });
 
             if(msgErr != ""){
                 $("#dialogMakeRoomErr").html(msgErr);
@@ -1053,6 +1089,13 @@ async function choiceRoom(roomName){
                     }
                 },
                 {
+                    text: "このアプリについて",
+                    click: function(){
+                        $(this).dialog("close");
+                        dispDialogAbout();
+                    }
+                },
+                {
                     text: "閉じる",
                     click: function() {
                         $(this).dialog("close");
@@ -1087,7 +1130,14 @@ async function choiceRoom(roomName){
                         choiceRoom("");
                         $(this).dialog("close");
                     }
-                }
+                },
+                {
+                    text: "このアプリについて",
+                    click: function(){
+                        $(this).dialog("close");
+                        dispDialogAbout();
+                    }
+                },
             ]
         });
     }else if(roomName == ""){
@@ -1135,6 +1185,13 @@ async function choiceRoom(roomName){
             },
             buttons: [
                 {
+                    text: "このアプリについて",
+                    click: function(){
+                        $(this).dialog("close");
+                        dispDialogAbout();
+                    }
+                },
+                {
                     text: "閉じる",
                     click: function() {
                         $(this).dialog("close");
@@ -1165,6 +1222,27 @@ async function choiceRoom(roomName){
 
         $("#choiceRoomBody").html(html);
     }
+}
+
+function dispDialogAbout(){
+    $("#dialogAbout").dialog({
+        title: "このアプリについて",
+        modal: true,
+        position: {my: "center center" , at: "center center", of: window},
+        show : "fade",
+        hide : "fade",
+        width:$("#main").width() * 0.8,
+        height:$("#main").height() * 0.8,
+        buttons: [
+            {
+                text: "閉じる",
+                click: function() {
+                    $(this).dialog("close");
+                }
+            }
+        ]
+    });
+
 }
 
 function showError(msg){
