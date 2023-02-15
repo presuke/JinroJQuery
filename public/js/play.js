@@ -148,7 +148,7 @@ $(document).ready(async function(){
                     obj.players.forEach(function(player) {
                         $(".avater").each(function() {
                             const avaterIcon = $(this).css("background-image");
-                            if(avaterIcon.indexOf(player.icon)) {
+                            if(avaterIcon.indexOf(player.icon) >= 0) {
                                 $(this).css("filter", "grayscale(100%)");
                                 $(this).data("disabled", true);
                             }
