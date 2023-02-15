@@ -143,6 +143,7 @@ $(document).ready(async function(){
             if(objStatus.info.pass == ""){
                 $("#overlay").fadeOut();
 
+                /*
                 const obj = await callAPI("getPlayers", $("#status").val());
                 if(obj.players != undefined){
                     obj.players.forEach(function(player) {
@@ -155,6 +156,7 @@ $(document).ready(async function(){
                         });
                     });
                 }
+                */
             }else{
                 $("#initialBox").fadeOut();
                 $(".backGroundDesign").fadeOut();
