@@ -146,7 +146,7 @@ $(document).ready(async function(){
                 const obj = await callAPI("getPlayers", $("#status").val());
                 if(obj.players != undefined){
                     obj.players.forEach(function(player) {
-                        $(".avater").each(function() {
+                        $(".avater div").each(function() {
                             const avaterIcon = $(this).css("background-image");
                             if(avaterIcon.indexOf(player.icon) >= 0) {
                                 $(this).css("filter", "grayscale(100%)");
