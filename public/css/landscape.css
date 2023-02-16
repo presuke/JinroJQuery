@@ -20,6 +20,7 @@
         background-color: #000;
         background-image: url('../image/menu.png');
         background-size:cover;
+        cursor: pointer;
     }
 
     #initialBox{

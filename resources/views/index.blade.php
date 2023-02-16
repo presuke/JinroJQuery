@@ -39,20 +39,6 @@
 </head>
 <body class="antialiased">
 <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
-    @if (Route::has('login'))
-        <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
-            @auth
-                <a href="{{ url('/home') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Home</a>
-            @else
-                <a href="{{ route('login') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Log in</a>
-
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 dark:text-gray-500 underline">Register</a>
-                @endif
-            @endauth
-        </div>
-    @endif
-
     <input id="status" type="hidden" value="{}" />
     <div id="main">
         <header>
@@ -298,20 +284,25 @@
     </div>
 
     <div id="dialogAlert"></div>
-    <div id="dialogAbout">
+    <div id="dialogAbout" style="display:none;">
         このアプリケーションは、学習用に作成したものです。<br />
-        人狼ゲームをネットワークでプレイできるようにしている（つもり）です。<br />
+        人狼ゲームをネットワークでプレイできるようにしました。<br />
         レスポンシブ対応（のつもり）です。スマホ、タブレット、PCでプレイできます。<br />
-        チャットなどのコミュニケーション機能はないので、プレイするときはみんなで集まってください。<br />
+        <br />
+        チャットなどのコミュニケーション機能はないので、プレイするときはみんなで集まって遊んでください。<br />
         本当はビデオ会議の仕組みとかあると面白そうだなと思ってます。<br />
-        余裕があったら、チャレンジしてみます。<br />
+        あと、フロント側はReact化しようと思ってます。（勉強中です）<br />
+        色々チャレンジしてみます。<br />
+        <br />
         ところで、このアプリは、以下の環境で作成しています。<br />
-        PHP 8.0．25<br />
-        Laravel 9.50.2<br />
-        MYSQL 15.1<br />
-        JQuery 3.4.1<br />
-        PhpStorm 2022.3.2<br />
-        VSCode 1.75.1<br/>
+        <div style="padding:10px; border-radius: 5px; border: solid thin #66ffcc;">
+            PHP 8.0．25<br />
+            Laravel 9.50.2<br />
+            MYSQL 15.1<br />
+            JQuery 3.4.1<br />
+            PhpStorm 2022.3.2<br />
+            VSCode 1.75.1<br/>
+        </div>
         <br />
         イラストは、<a href="https://blog.goo.ne.jp/akarise" target="_blank">ゆうひな</a>様の素材を使わせていただきました。<br />
         素敵なイラストありがとうございます。<br />

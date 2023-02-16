@@ -20,7 +20,8 @@
         border-radius: 50%;
         background-color: #000;
         background-image: url('../image/menu.png');
-        background-size:cover;
+        background-size: cover;
+        cursor: pointer;
     }
 
     #initialBox{
